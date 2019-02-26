@@ -1,0 +1,2 @@
+[2019-02-26 23:36:30,991][INFO][epoch:0	loss:tensor(5.6635, device='cuda:0')]
+[2019-02-26 23:36:40,632][INFO][LCC:tensor(0.0247)]
