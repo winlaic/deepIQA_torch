@@ -19,7 +19,7 @@ def parse_args():
                         default='/media/cel-door/6030688C30686B4C/winlaic_dataset/IQA/TID2013_new/distorted_images')
     parser.add_argument('-t', '--target-file',
                         default='/media/cel-door/6030688C30686B4C/winlaic_dataset/IQA/TID2013_new/mos_with_names.txt')
-    parser.add_argument('--batch-size', type=int, default=64, metavar='N',
+    parser.add_argument('--batch-size', type=int, default=4, metavar='N',
                         help='input batch size for training (default: 64)')
     parser.add_argument('--epochs', type=int, default=5000, metavar='N', help='number of epochs to train (default: 100)')
     parser.add_argument('--lr', type=float, default=1e-4, metavar='LR', help='learning rate (default: 1e-4)')
@@ -38,9 +38,9 @@ if __name__ == '__main__':
     net = deepIQA()
     net.cuda().train()
     # net.apply(weights_init)
-    train_loader = torch.utils.data.DataLoader(train_set, 4, shuffle=True, num_workers=args.num_threads,
+    train_loader = torch.utils.data.DataLoader(train_set, args.batch_size, shuffle=True, num_workers=args.num_threads,
                                              pin_memory=True, drop_last=True)
-    optimizer = torch.optim.Adam(net.parameters(), lr=1e-4)
+    optimizer = torch.optim.Adam(net.parameters(), lr=args.lr)
 
     for _i in range(args.epochs):
         net.train()
@@ -68,7 +68,7 @@ if __name__ == '__main__':
                     y_bar = y_bar.reshape(-1,32).sum(1)/a_bar.reshape(-1,32).sum(1)
                     y_all[i] = torch.tensor(eval_y,dtype=torch.float32)
                     y_bar_all[i] = y_bar.cpu()
-
-                logger.i=['LCC', LCC(y_all, y_bar_all)]
+                this_lcc = LCC(y_all, y_bar_all)
+                logger.i=['LCC', this_lcc]
                 logger.i=['SROCC', SROCC(y_all, y_bar_all)]
-                torch.save(net, join(saver.save_dir(), 'Model.mdl')
+                torch.save(net, join(saver.save_dir(['LCC','%.3f' % float(this_lcc)]), 'Model.mdl'))

@@ -6,12 +6,12 @@ import torch.functional as F
 import pdb
 
 class VGGpart(NN.Module):
-    def __init__(self,ch_in,ch_out,kernal_size=3):
+    def __init__(self,ch_in,ch_out,kernal_size=3, padding=1):
         super().__init__()
         self.conv = NN.Sequential(
-            NN.Conv2d(ch_in,ch_out,kernal_size,padding=1),
+            NN.Conv2d(ch_in,ch_out,kernal_size,padding),
             NN.ReLU(inplace=True),
-            NN.Conv2d(ch_out,ch_out,kernal_size,padding=1),
+            NN.Conv2d(ch_out,ch_out,kernal_size,padding),
             NN.ReLU(inplace=True),
             NN.MaxPool2d(2,2)
         )
