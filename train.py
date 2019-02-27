@@ -7,7 +7,7 @@ from net import deepIQA, weighted_loss, weights_init
 import imageio
 from utils import *
 from dataset import *
-from winlaic_utils import WinlaicLogger, Averager
+from winlaic_utils import WinlaicLogger, Averager, ModelSaver
 import pdb
 import tqdm
 from iqa_utils import LCC, SROCC
@@ -32,6 +32,7 @@ if __name__ == '__main__':
     args = parse_args()
     logger = WinlaicLogger()
     loss_collector = Averager()
+    saver = ModelSaver()
     device = torch.device('cuda:0')
     train_set, validation_set, test_set = generate_dataset(args.data_dir, args.target_file, part_ratio=(15,5,5))
     net = deepIQA()
@@ -55,20 +56,19 @@ if __name__ == '__main__':
         
         logger.i=['epoch',_i ,'loss',loss_collector.mean]
         loss_collector.clear()
+        if _i != 0 and _i % 10 == 0:
+            net.eval()
+            with torch.no_grad():
+                y_all = torch.empty(size=(len(validation_set),),dtype=torch.float32)
+                y_bar_all = torch.empty(size=(len(validation_set),),dtype=torch.float32)
+                for i, (eval_img, eval_y) in enumerate(validation_set):
+                    eval_img = eval_img.reshape([-1,32,32,3]).transpose(1,3).transpose(2,3).float().cuda()
+                    x_bar, a_bar = net(eval_img)
+                    y_bar = x_bar*a_bar
+                    y_bar = y_bar.reshape(-1,32).sum(1)/a_bar.reshape(-1,32).sum(1)
+                    y_all[i] = torch.tensor(eval_y,dtype=torch.float32)
+                    y_bar_all[i] = y_bar.cpu()
 
-        net.eval()
-        with torch.no_grad():
-            y_all = torch.empty(size=(len(validation_set),),dtype=torch.float32)
-            y_bar_all = torch.empty(size=(len(validation_set),),dtype=torch.float32)
-            for i, (eval_img, eval_y) in enumerate(validation_set):
-                eval_img = eval_img.reshape([-1,32,32,3]).transpose(1,3).transpose(2,3).float().cuda()
-                x_bar, a_bar = net(eval_img)
-                y_bar = x_bar*a_bar
-                y_bar = y_bar.reshape(-1,32).sum(1)/a_bar.reshape(-1,32).sum(1)
-                y_all[i] = torch.tensor(eval_y,dtype=torch.float32)
-                y_bar_all[i] = y_bar.cpu()
-
-            logger.i=['LCC',LCC(y_all, y_bar_all)]
-            logger.i=['SROCC', SROCC(y_all, y_bar_all)]
-
-    pass
+                logger.i=['LCC', LCC(y_all, y_bar_all)]
+                logger.i=['SROCC', SROCC(y_all, y_bar_all)]
+                torch.save(net, join(saver.save_dir(), 'Model.mdl')

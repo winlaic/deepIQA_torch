@@ -5,6 +5,7 @@ import time
 import logging
 import sys
 import tqdm
+from os.path import join
 
 
 def full_path(path_list):
@@ -155,4 +156,18 @@ def removeall(dir):
             os.remove(file)
         shutil.rmtree(dir)
     
+class ModelSaver():
+    def __init__(self, dir='saved_models'):
+        self.begin_time = time.localtime()
+        self.dir = join('.', dir, '%0.4d-%0.2d-%0.2d_%0.2d-%0.2d-%0.2d' % tuple(list(self.begin_time)[0:6]))
+        if not os.path.exists(self.dir):
+            os.makedirs(self.dir)
         
+    def save_dir(self, comments):
+        assert isinstance(comments, list) and len(comments)%2 == 0, 'Wrong comment format.'
+        saved_dir = '%0.4d-%0.2d-%0.2d_%0.2d-%0.2d-%0.2d' % tuple(list(time.localtime())[0:6])
+        for i in range(len(comments)//2):
+            saved_dir += '_{0}:{1}'.format(comments[i*2], comments[i*2+1])
+        saved_dir = join(self.dir,saved_dir)
+        os.makedirs(saved_dir)
+        return saved_dir
