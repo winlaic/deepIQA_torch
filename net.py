@@ -9,9 +9,9 @@ class VGGpart(NN.Module):
     def __init__(self,ch_in,ch_out,kernal_size=3, padding=1):
         super().__init__()
         self.conv = NN.Sequential(
-            NN.Conv2d(ch_in,ch_out,kernal_size,padding),
+            NN.Conv2d(ch_in,ch_out,kernal_size,padding=padding),
             NN.ReLU(inplace=True),
-            NN.Conv2d(ch_out,ch_out,kernal_size,padding),
+            NN.Conv2d(ch_out,ch_out,kernal_size,padding=padding),
             NN.ReLU(inplace=True),
             NN.MaxPool2d(2,2)
         )
@@ -21,8 +21,14 @@ class VGGpart(NN.Module):
 class deepIQA(NN.Module):
     def __init__(self):
         super().__init__()
-        self.conv = NN.Sequential(
-            VGGpart(3,32),VGGpart(32,64),VGGpart(64,128),VGGpart(128,256),VGGpart(256,512)
+        self.conv_b1 = NN.Sequential(
+            VGGpart(3,32),VGGpart(32,64),VGGpart(64,128)
+        )
+        self.conv_b2 = NN.Sequential(
+            VGGpart(3,32,5,2),VGGpart(32,64,5,2),VGGpart(64,128,5,2)
+        )
+        self.conv_all = NN.Sequential(
+            VGGpart(256,256),VGGpart(256,512)
         )
         self.fc_weights = NN.Sequential(
             NN.Linear(512,512),NN.ReLU(),NN.Dropout(.5),
@@ -33,7 +39,10 @@ class deepIQA(NN.Module):
             NN.Linear(512,1),NN.ReLU()
         )
     def forward(self,x):
-        x = self.conv(x)
+        x1 = self.conv_b1(x)
+        x2 = self.conv_b2(x)
+        x = torch.cat([x1, x2],1)
+        x = self.conv_all(x)
         x = x.squeeze()
         a = self.fc_weights(x)
         a += 0.000001
