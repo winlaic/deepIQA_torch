@@ -1,0 +1,15 @@
+[2019-03-04 00:35:06,753][INFO][epoch:0	loss:tensor(1.1510, device='cuda:0')]
+[2019-03-04 00:35:21,451][INFO][epoch:1	loss:tensor(1.0404, device='cuda:0')]
+[2019-03-04 00:35:36,107][INFO][epoch:2	loss:tensor(1.0653, device='cuda:0')]
+[2019-03-04 00:35:50,799][INFO][epoch:3	loss:tensor(1.0631, device='cuda:0')]
+[2019-03-04 00:36:05,511][INFO][epoch:4	loss:tensor(1.0526, device='cuda:0')]
+[2019-03-04 00:36:20,143][INFO][epoch:5	loss:tensor(1.0193, device='cuda:0')]
+[2019-03-04 00:36:34,790][INFO][epoch:6	loss:tensor(1.0054, device='cuda:0')]
+[2019-03-04 00:36:49,467][INFO][epoch:7	loss:tensor(1.0112, device='cuda:0')]
+[2019-03-04 00:37:04,113][INFO][epoch:8	loss:tensor(0.9801, device='cuda:0')]
+[2019-03-04 00:37:18,768][INFO][epoch:9	loss:tensor(1.0488, device='cuda:0')]
+[2019-03-04 00:37:33,426][INFO][epoch:10	loss:tensor(1.0019, device='cuda:0')]
+[2019-03-04 00:37:35,169][WARNING][LCC:tensor(0.0521)]
+[2019-03-04 00:37:35,170][WARNING][SROCC:tensor(0.0487)]
+
+Random label.
