@@ -22,31 +22,38 @@ class deepIQA(NN.Module):
     def __init__(self):
         super().__init__()
         self.conv_b1 = NN.Sequential(
-            VGGpart(3,32),VGGpart(32,64),VGGpart(64,128)
+            VGGpart(3,32),VGGpart(32,64),VGGpart(64,128),
+            VGGpart(128,256),VGGpart(256,512)
         )
         self.conv_b2 = NN.Sequential(
-            VGGpart(3,32,5,2),VGGpart(32,64,5,2),VGGpart(64,128,5,2)
+            VGGpart(3,32,5,2),VGGpart(32,64,5,2),VGGpart(64,128,5,2),
+            VGGpart(128,256,5,2),VGGpart(256,512,5,2)
         )
         self.conv_b3 = NN.Sequential(
-            VGGpart(3,32,7,3),VGGpart(32,64,7,3),VGGpart(64,128,7,3)
-        )
-        self.conv_all = NN.Sequential(
-            VGGpart(384,512),VGGpart(512,1024)
+            VGGpart(3,32,7,3),VGGpart(32,64,7,3),VGGpart(64,128,7,3),
+            VGGpart(128,256,7,3),VGGpart(256,512,7,3)
         )
         self.fc_weights = NN.Sequential(
-            NN.Linear(1024,1024),NN.ReLU(),NN.Dropout(.5),
-            NN.Linear(1024,1),NN.ReLU()
+            NN.Linear(512*3,512*3),NN.ReLU(),NN.Dropout(.5),
+            NN.Linear(512*3,1),NN.ReLU()
         )
         self.fc_values = NN.Sequential(
-            NN.Linear(1024,1024),NN.ReLU(),NN.Dropout(.5),
-            NN.Linear(1024,1),NN.ReLU()
+            NN.Linear(512*3,512*3),NN.ReLU(),NN.Dropout(.5),
+            NN.Linear(512*3,1),NN.ReLU()
         )
+        # self.fc_weights = NN.Sequential(
+        #     NN.Linear(1024,1024),NN.ReLU(),NN.Dropout(.5),
+        #     NN.Linear(1024,1),NN.ReLU()
+        # )
+        # self.fc_values = NN.Sequential(
+        #     NN.Linear(1024,1024),NN.ReLU(),NN.Dropout(.5),
+        #     NN.Linear(1024,1),NN.ReLU()
+        # )
     def forward(self,x):
         x1 = self.conv_b1(x)
         x2 = self.conv_b2(x)
         x3 = self.conv_b3(x)
         x = torch.cat([x1, x2, x3], 1)
-        x = self.conv_all(x)
         x = x.squeeze()
         a = self.fc_weights(x)
         a += 0.000001

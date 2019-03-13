@@ -34,7 +34,7 @@ def parse_args():
 if __name__ == '__main__':
     args = parse_args()
     logger = WinlaicLogger()
-    logger.w = ['Model','Change dense layer size to 1024']
+    logger.w = ['Model','Try original network again.']
     loss_collector = Averager()
     saver = ModelSaver()
     device = torch.device('cuda:0')
