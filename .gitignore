@@ -1,3 +1,5 @@
 *.mdl
-saved_model
-__pycache__
+*.dat
+*.log
+/saved_model
+/__pycache__

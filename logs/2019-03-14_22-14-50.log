@@ -1,0 +1,3 @@
+[2019-03-14 22:14:50,233][WARNING][Model:Try ResNet.]
+[2019-03-14 22:15:02,080][INFO][epoch:0	loss:tensor(17.5372, device='cuda:0')]
+[2019-03-14 22:15:12,234][INFO][epoch:1	loss:tensor(17.6131, device='cuda:0')]

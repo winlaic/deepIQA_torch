@@ -26,6 +26,45 @@ class TID_Dataset(torch.utils.data.Dataset):
     def __len__(self):
         return len(self.mos_list)
 
+
+class SCID(torch.utils.data.Dataset):
+    def __init__(self, input_list, target_list):
+        self.input_list = input_list
+        self.target_list = target_list
+
+def dataset_generator(dataset, input_dir, target_file, sort_id_gen, target_extracter=lambda x:x, part_ratio=(8,2)):
+
+    file_list = os.listdir(input_dir)
+    file_list.sort(key=sort_id_gen)
+    file_list = np.array(file_list)
+
+    with open(target_file) as f:
+        target_file = csv.reader(f)
+        targets = np.array(target_extracter(list(target_file)),dtype=np.float32).transpose(1,0).reshape(-1)
+
+    n_data = len(targets)
+    n_training = int(np.floor(n_data * (part_ratio[0]/sum(part_ratio))))
+
+	# shuffle dataset and label simutaneously
+    shuffle_index = np.random.choice(n_data, n_data, replace=False)
+    file_list = file_list[shuffle_index]
+    targets = targets[shuffle_index]
+	
+	#  replace with full path
+    file_list = [str(item) for item in file_list]
+    for i in range(n_data):
+        file_list[i] = join(input_dir, file_list[i])
+    
+	# generate file and label list
+    training_file_list = file_list[0:n_training]
+    training_label = targets[0:n_training]
+
+    testing_file_list = file_list[n_training:]
+    testing_label = targets[n_training:]
+
+    return dataset(training_file_list, training_label), \
+            dataset(testing_file_list, testing_label)
+
 class SIQAD(torch.utils.data.Dataset):
 
     def __init__(self, file_path_list, mos_list, patch_size=32):
@@ -36,7 +75,10 @@ class SIQAD(torch.utils.data.Dataset):
     def __getitem__(self, index):
         img = extract_patches(imageio.imread(self.file_path_list[index]))
         img = np.reshape(img, [-1,32,32,3])
-        img = img[np.random.choice(img.shape[0], self.patch_size, replace=False)]
+        if isinstance(self.patch_size,int):
+            img = img[np.random.choice(img.shape[0], self.patch_size, replace=False)]
+        else:
+            img = img[np.random.choice(img.shape[0], img.shape[0], replace=False)]
         mos = self.mos_list[index]
         return torch.tensor(img), mos
 
@@ -91,4 +133,4 @@ def generate_SIQAD(image_path, dmos_file, part_ratio=(8,2)):
     testing_image_mos = mos[n_training:]
 
     return SIQAD(training_image_file, training_image_mos), \
-            SIQAD(testing_image_file, testing_image_mos)
+            SIQAD(testing_image_file, testing_image_mos, 'all')
