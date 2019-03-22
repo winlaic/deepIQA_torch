@@ -11,16 +11,22 @@ from winlaic_utils import WinlaicLogger, Averager, ModelSaver
 import pdb
 import tqdm
 from iqa_utils import LCC, SROCC
+import os
+
+run_on = os.environ['HOSTNAME']
+if run_on == 'swarm02':
+    data_base_dir = '/home/lxye/project/datasets'
+elif run_on == 'celdoor-B85-HD3':
+    data_base_dir = '/media/cel-door/6030688C30686B4C/winlaic_dataset'
+
 
 def parse_args():
     parser = argparse.ArgumentParser()
     
     parser.add_argument('-d', '--data-dir',
-                        # default='/media/cel-door/6030688C30686B4C/winlaic_dataset/IQA/TID2013_new/distorted_images')
-                        default='/media/cel-door/6030688C30686B4C/winlaic_dataset/SCI/SIQAD/DistortedImages')
+                        default=os.path.join(data_base_dir,'SCI/SIQAD/DistortedImages'))
     parser.add_argument('-t', '--target-file',
-                        # default='/media/cel-door/6030688C30686B4C/winlaic_dataset/IQA/TID2013_new/mos_with_names.txt')
-                        default='/media/cel-door/6030688C30686B4C/winlaic_dataset/SCI/SIQAD/DMOS.csv')
+                        default=os.path.join(data_base_dir,'SCI/SIQAD/DMOS.csv'))
     parser.add_argument('--batch-size', type=int, default=8, metavar='N',
                         help='input batch size for training (default: 64)')
     parser.add_argument('--save-freq', type=int, default=50)
