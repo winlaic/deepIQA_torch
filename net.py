@@ -5,6 +5,24 @@ import torch.nn as NN
 import torch.nn.functional as F
 import pdb
 
+class BiBranchAll(NN.Module):
+    def __init__(self):
+        super().__init__()
+        self.ori_net = DualPoolBranch()
+        self.grad_net_h = DualPoolBranch(out_dense=512)
+        # self.grad_net_w = DualPoolBranch(out_dense=256)
+        self.fusion_net = TriBranch()
+
+    def forward(self, xo, xw):
+        xo = xo.reshape([-1,32,32,3]).transpose(1,3).transpose(2,3).float().cuda()
+        xw = xw.reshape([-1,32,32,3]).transpose(1,3).transpose(2,3).float().cuda()
+        xo = self.ori_net(xo)
+        xw = self.grad_net_h(xw)
+        y = torch.cat([xo, xw], dim=1)
+        y = self.fusion_net(y)
+        return y
+
+
 class ResPart(NN.Module):
     def __init__(self, ch_in, ch_out, kernal_size=3, padding=1, increase_dim_method = 'zero_padding'):
         super().__init__()
@@ -122,7 +140,4 @@ def weighted_loss(x, a, y, n_patch_per_img=32):
     # pdb.set_trace()
     return (y-scores).abs().sum() # MAE
     
-def weights_init(m):
-    classname = m.__class__.__name__
-    if classname.find('Conv') != -1:
-        NN.init.normal_(m.weight.data, 0.0, 0.005)
+
