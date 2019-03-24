@@ -9,15 +9,17 @@ from utils import *
 from dataset import *
 from winlaic_utils import WinlaicLogger, Averager, ModelSaver
 import pdb
-import tqdm
+
 from iqa_utils import LCC, SROCC
 import os
 
-run_on = os.environ['HOSTNAME']
-if run_on == 'swarm02':
+run_on = os.environ['LOGNAME']
+if run_on == 'lxye':
     data_base_dir = '/home/lxye/project/datasets'
-elif run_on == 'celdoor-B85-HD3':
+    tqdm = lambda x:x
+elif run_on == 'cel-door':
     data_base_dir = '/media/cel-door/6030688C30686B4C/winlaic_dataset'
+    from tqdm import tqdm
 
 
 def parse_args():
@@ -38,11 +40,13 @@ def parse_args():
     return args
 
 
-def apply_weights(x, w, patch_size = 32):
-    y = x*w
-    y = y.reshape(-1, patch_size).sum(dim=1)
-    w_sum = w.reshape(-1, patch_size).sum(dim=1)+0.000001
-    return y/w_sum
+
+def forward_data(net1, net2, x1, x2):
+    x1 = net1(x1)
+    x2 = net1(x2)
+    y = torch.cat([x1, x2], 1)
+    y = net2(y)
+    return y
 
 
 if __name__ == '__main__':
@@ -63,7 +67,7 @@ if __name__ == '__main__':
     optimizer = torch.optim.Adam(net.parameters(), lr=args.lr)
     for _i in range(args.epochs):
         net.train()
-        for patch, mos in tqdm.tqdm(train_loader):
+        for patch, mos in tqdm(train_loader):
             patch = patch.reshape([-1,32,32,3]).transpose(1,3).transpose(2,3).float().cuda()
             net.zero_grad()
             x = net(patch)

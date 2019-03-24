@@ -72,6 +72,33 @@ class deepIQA(NN.Module):
         x = self.dense(x)
         return x
 
+class DualPoolConv(NN.Module):
+    def __init__(self):
+        super().__init__()
+        self.conv = NN.Sequential(
+            NN.Conv2d(3, 50, 7),NN.ReLU(inplace=True),DualPooling(2, 2),
+            NN.Conv2d(100, 100, 7),NN.ReLU(inplace=True),DualPooling(2,2)
+        )
+        self.dense = NN.Sequential(
+            NN.Linear(3*3*200, 512), NN.ReLU(),
+            NN.Linear(512, 512), NN.ReLU()
+            )
+        
+    def forward(self,x):
+        x = self.conv(x)
+        x = x.view(-1,3*3*200)
+        x = self.dense(x)
+        return x
+
+class BiBranch(NN.Module):
+    def __init__(self):
+        super().__init__()
+        self.dense = NN.Sequential(
+            NN.Linear(1024, 1024), NN.ReLU(),
+            NN.Linear(1024, 1024), NN.ReLU(),
+            NN.Linear(1024, 1), NN.ReLU()
+        )
+
 def weighted_loss(x, a, y, n_patch_per_img=32):
     scores = (a*x).reshape(-1,n_patch_per_img).sum(1)/a.reshape(-1,n_patch_per_img).sum(1)
     # pdb.set_trace()

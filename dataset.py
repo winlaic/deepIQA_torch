@@ -2,7 +2,7 @@ import numpy as np
 import torch, torch.utils.data
 import torch.functional as F
 from utils import *
-import imageio
+from PIL import Image
 import csv
 import random
 from os.path import join
@@ -73,14 +73,24 @@ class SIQAD(torch.utils.data.Dataset):
         self.patch_size = patch_size
 
     def __getitem__(self, index):
-        img = extract_patches(imageio.imread(self.file_path_list[index]))
-        img = np.reshape(img, [-1,32,32,3])
+        original_img = np.array(Image.open(self.file_path_list[index]))
+        dirivtive_img_h = np.diff(original_img,axis=0)
+        dirivtive_img_h = np.pad(dirivtive_img_h, ((0,1),(0,0),(0,0)), 'constant', constant_values = ((0,0),(0,0),(0,0)))
+        original_img = extract_patches(original_img)
+        dirivtive_img_h = extract_patches(dirivtive_img_h)
+
+        original_img = np.reshape(original_img, [-1,32,32,3])
+        dirivtive_img_h = np.reshape(dirivtive_img_h, [-1,32,32,3])
+
         if isinstance(self.patch_size,int):
-            img = img[np.random.choice(img.shape[0], self.patch_size, replace=False)]
+            original_img = original_img[np.random.choice(original_img.shape[0], self.patch_size, replace=False)]
+            dirivtive_img_h = dirivtive_img_h[np.random.choice(dirivtive_img_h.shape[0], self.patch_size, replace=False)]
         else:
-            img = img[np.random.choice(img.shape[0], img.shape[0], replace=False)]
+            original_img = original_img[np.random.choice(original_img.shape[0], original_img.shape[0], replace=False)]
+            dirivtive_img_h = dirivtive_img_h[np.random.choice(dirivtive_img_h.shape[0], original_img.shape[0], replace=False)]
+
         mos = self.mos_list[index]
-        return torch.tensor(img), mos
+        return torch.tensor(original_img), torch.tensor(dirivtive_img_h), mos
 
     def __len__(self):
         return len(self.file_path_list)
