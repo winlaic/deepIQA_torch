@@ -78,27 +78,31 @@ class SIQAD(torch.utils.data.Dataset):
         dirivtive_img_h = np.diff(original_img,axis=0)
         dirivtive_img_h = np.pad(dirivtive_img_h, ((0,1),(0,0),(0,0)), 'constant', constant_values = ((0,0),(0,0),(0,0)))
         
-        # dirivtive_img_w = np.diff(original_img,axis=1)
-        # dirivtive_img_w = np.pad(dirivtive_img_w, ((0,0),(0,1),(0,0)), 'constant', constant_values = ((0,0),(0,0),(0,0)))
+        dirivtive_img_w = np.diff(original_img,axis=1)
+        dirivtive_img_w = np.pad(dirivtive_img_w, ((0,0),(0,1),(0,0)), 'constant', constant_values = ((0,0),(0,0),(0,0)))
 
         original_img = extract_patches(original_img)
-        dirivtive_img = extract_patches(dirivtive_img_h)
-        # dirivtive_img_w = extract_patches(dirivtive_img_w)
+        dirivtive_img_h = extract_patches(dirivtive_img_h)
+        dirivtive_img_w = extract_patches(dirivtive_img_w)
 
         # dirivtive_img = np.concatenate([dirivtive_img_h, dirivtive_img_w], axis=5)
 
         original_img = np.reshape(original_img, [-1,32,32,3])
-        dirivtive_img = np.reshape(dirivtive_img, [-1,32,32,3])
+        dirivtive_img_h = np.reshape(dirivtive_img_h, [-1,32,32,3])
+        dirivtive_img_w = np.reshape(dirivtive_img_w, [-1,32,32,3])
 
+        
         if isinstance(self.patch_size,int):
-            original_img = original_img[np.random.choice(original_img.shape[0], self.patch_size, replace=False)]
-            dirivtive_img = dirivtive_img[np.random.choice(dirivtive_img.shape[0], self.patch_size, replace=False)]
+            random_indexes = np.random.choice(original_img.shape[0], self.patch_size, replace=False)
         else:
-            original_img = original_img[np.random.choice(original_img.shape[0], original_img.shape[0], replace=False)]
-            dirivtive_img = dirivtive_img[np.random.choice(dirivtive_img.shape[0], original_img.shape[0], replace=False)]
+            random_indexes = np.random.choice(original_img.shape[0], original_img.shape[0], replace=False)
+        
+        original_img = original_img[random_indexes]
+        dirivtive_img_h = dirivtive_img_h[random_indexes]
+        dirivtive_img_w = dirivtive_img_w[random_indexes]
 
         mos = self.mos_list[index]
-        return torch.tensor(original_img), torch.tensor(dirivtive_img), mos
+        return torch.tensor(original_img), torch.tensor(dirivtive_img_h), torch.tensor(dirivtive_img_w), mos
 
     def __len__(self):
         return len(self.file_path_list)

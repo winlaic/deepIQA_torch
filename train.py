@@ -1,9 +1,10 @@
 #!/usr/bin/python3
+# Love PePsi forever!
 import argparse
 import numpy as np
 import torch
 import torch.nn.functional as F
-from net import DualPoolBranch, BiBranch, weighted_loss, weights_init
+from net import DualPoolBranch, BiBranch, TriBranch, weighted_loss, weights_init
 import imageio
 from utils import *
 from dataset import *
@@ -51,6 +52,16 @@ def forward_data(net1, net2, net, x1, x2):
     y = net(y)
     return y
 
+def forward_Tri(net_o, net_h, net_w, net_f, xo, xh, xw):
+    xo = xo.view([-1,32,32,3]).transpose(1,3).transpose(2,3).float().cuda()
+    xh = xh.view([-1,32,32,3]).transpose(1,3).transpose(2,3).float().cuda()
+    xw = xw.view([-1,32,32,3]).transpose(1,3).transpose(2,3).float().cuda()
+    xo = net_o(xo)
+    xh = net_h(xh)
+    xw = net_w(xw)
+    y = torch.cat([xo, xh, xw], dim=1)
+    y = net_f(y)
+    return y
 
 if __name__ == '__main__':
     args = parse_args()
@@ -63,9 +74,10 @@ if __name__ == '__main__':
 
 
     ori_net = DualPoolBranch()
-    grad_net = DualPoolBranch()
-    fusion_net = BiBranch()
-    nets = [ori_net, grad_net, fusion_net]
+    grad_net_h = DualPoolBranch(out_dense=256)
+    grad_net_w = DualPoolBranch(out_dense=256)
+    fusion_net = TriBranch()
+    nets = [ori_net, grad_net_h, grad_net_w, fusion_net]
     for net in nets: 
         net.cuda()
         net.apply(weights_init)
@@ -80,11 +92,10 @@ if __name__ == '__main__':
 
     for _i in range(args.epochs):
         for net in nets: net.train()
-        for patch, patch_grad, mos in tqdm(train_loader):
+        for patch, patch_grad_h, patch_grad_w, mos in tqdm(train_loader):
             for net in nets: net.zero_grad()
             
-            
-            x = forward_data(ori_net, grad_net, fusion_net, patch, patch_grad)
+            x = forward_Tri(ori_net, grad_net_h, grad_net_w, fusion_net, patch, patch_grad_h, patch_grad_w)
             x = x.view(args.batch_size, -1).mean(dim=1)
             y = mos.float().cuda()
 
@@ -93,7 +104,7 @@ if __name__ == '__main__':
             loss_collector.add(loss.data)
             optimizer.step()
         
-        logger.i=['epoch',_i ,'loss',loss_collector.mean]
+        logger.i=['EPOCH',_i ,'LOSS',loss_collector.mean]
         loss_collector.clear()
         if _i != 0 and _i % 10 == 0:
             net.eval()
@@ -104,21 +115,22 @@ if __name__ == '__main__':
                 y_bar_all = torch.empty(size=(len(validation_set),),dtype=torch.float32)
 
                 # forward on test set
-                for i, (eval_img, eval_grad, eval_y) in enumerate(validation_set):
-                    y_bar = forward_data(ori_net, grad_net, fusion_net, eval_img, eval_grad).mean()
+                for i, (eval_img, eval_grad_h, eval_grad_w, eval_y) in enumerate(validation_set):
+                    y_bar = forward_Tri(ori_net, grad_net_h, grad_net_w, fusion_net, eval_img, eval_grad_h, eval_grad_w).mean()
                     y_all[i] = torch.tensor(eval_y, dtype=torch.float32)
                     y_bar_all[i] = y_bar.cpu()
                 
                 this_lcc = LCC(y_all, y_bar_all).numpy()
                 this_srocc = SROCC(y_all, y_bar_all).numpy()
-                logger.w=['LCC', this_lcc]
-                logger.w=['SROCC', this_srocc]
+                logger.w=['LCC', this_lcc,'SROCC', this_srocc]
 
                 # Save model
                 if _i % args.save_freq == 0:
                     logger.w = ['Model saved']
                     save_dir = saver.save_dir(['LCC','%.3f' % float(this_lcc)])
                     torch.save(ori_net.state_dict(), join(save_dir, 'Main.mdl'))
-                    torch.save(grad_net.state_dict(), join(save_dir, 'Grad.mdl'))
+                    torch.save(grad_net_h.state_dict(), join(save_dir, 'Grad_h.mdl'))
+                    torch.save(grad_net_w.state_dict(), join(save_dir, 'Grad_w.mdl'))
                     torch.save(fusion_net.state_dict(), join(save_dir, 'Fusion.mdl'))
-                    torch.save(optimizer.state_dict(), join(save_dir, 'Optimizer.dat'))
+                    # Optimizer is too large.
+                    # torch.save(optimizer.state_dict(), join(save_dir, 'Optimizer.dat'))

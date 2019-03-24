@@ -73,15 +73,15 @@ class deepIQA(NN.Module):
         return x
 
 class DualPoolBranch(NN.Module):
-    def __init__(self, in_channel=3):
+    def __init__(self, in_channel=3, out_dense=512):
         super().__init__()
         self.conv = NN.Sequential(
             NN.Conv2d(in_channel, 50, 7),NN.ReLU(inplace=True),DualPooling(2, 2),
             NN.Conv2d(100, 100, 7),NN.ReLU(inplace=True),DualPooling(2,2)
         )
         self.dense = NN.Sequential(
-            NN.Linear(3*3*200, 512), NN.ReLU(),
-            NN.Linear(512, 512), NN.ReLU()
+            NN.Linear(3*3*200, out_dense), NN.ReLU(),
+            NN.Linear(out_dense, out_dense), NN.ReLU()
             )
         
     def forward(self,x):
@@ -105,8 +105,8 @@ class TriBranch(NN.Module):
     def __init__(self):
         super().__init__()
         self.dense = NN.Sequential(
-            NN.Linear(3*512, 3*512), NN.ReLU(),
-            NN.Linear(3*512, 1024), NN.ReLU(),
+            NN.Linear(2*512, 2*512), NN.ReLU(),
+            NN.Linear(2*512, 1024), NN.ReLU(),
             NN.Linear(1024, 1), NN.ReLU()
         )
     def forward(self, x):
