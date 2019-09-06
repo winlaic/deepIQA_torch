@@ -1,0 +1,22 @@
+# TID2013 Dataset
+data_dir:               /path/to/TID2013/distorted_images
+train_metadata_file:    /path/to/TID2013/metadata_train.json
+validate_metadata_file: /path/to/TID2013/metadata_validate.json
+index_column_img:       4
+index_column_target:    3
+
+# LIVE2016 Dataset
+# data_dir:               /path/to/LIVE2016
+# train_metadata_file:    /path/to/LIVE2016/metadata_train.json
+# validate_metadata_file: /path/to/LIVE2016/metadata_validate.json
+# index_column_img:       3
+# index_column_target:    4
+
+# Default trainning setting
+learning_rate:        0.0001
+number_batch:         4
+number_epoch:         4096
+number_patch:         32
+regulation:           0
+size_patch:           32
+validate_period:      10

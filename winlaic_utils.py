@@ -8,41 +8,7 @@ import tqdm
 from os.path import join
 
 
-def full_path(path_list):
-    ret = ''
-    for item in path_list:
-        ret += item + os.sep
-    return ret[0:-1]
-
-
-def get_onehot_labels(intLabels, nClasses=None):
-    if nClasses == None:
-        nClasses = len(set(intLabels))
-    if type(intLabels) != np.array:
-        intLabels = np.array(intLabels)
-    ret = np.zeros([len(intLabels), nClasses])
-    for i in range(len(intLabels)):
-        ret[i, intLabels[i]] = 1
-    return ret
-
-class LayerNamer:
-    def __init__(self):
-        # 这个列表反向存储，增长时插在最前面。
-        self.layers = []
-    def get_name(self,layer_type):
-        # 以池化层作为标记命名其他层。
-        if layer_type == 'pool':
-            self.layers.insert(0,'pool')
-            pool_index = self.layers.count('pool')
-            return 'pool' + str(pool_index)
-        else:
-            self.layers.insert(0,layer_type)
-            try:
-                conv_index = self.layers.index('pool')
-            except ValueError:
-                conv_index = len(self.layers)
-            pool_index = self.layers.count('pool') + 1
-            return layer_type + str(pool_index) + '_' + str(conv_index)
+listt = lambda x: list(map(list, zip(*x)))
 
 # 与 TQDM 配合的 Handler ，防止干扰进度条的打印。            
 class TqdmLoggingHandler(logging.Handler):
@@ -113,7 +79,7 @@ class WinlaicLogger:
         for i_item, item in enumerate(message_list):
             ret += str(item)
             if i_item % 2 == 0:
-                ret += ':'
+                ret += ': '
             else:
                 ret += '\t'
         return ret[0:-1]
@@ -154,7 +120,7 @@ def removeall(dir):
             removeall(file)
         else:
             os.remove(file)
-        shutil.rmtree(dir)
+    shutil.rmtree(dir)
     
 class ModelSaver():
     def __init__(self, dir='saved_models'):
@@ -171,3 +137,4 @@ class ModelSaver():
         saved_dir = join(self.dir,saved_dir)
         os.makedirs(saved_dir)
         return saved_dir
+
