@@ -4,9 +4,9 @@
 
 #### Unsolved problems:
 
-1. **The model tend to overfit. **I 've tried my best to cover all specifications in the paper, adjusted the weight decay, but the network unfailingly overfits. On TID2013 dataset, if weight decay is not implemented, SROCC on validation set only can reach 0.5
+1. **The model tend to overfit.** I 've tried my best to cover all specifications in the paper, adjusted the weight decay, but the network unfailingly overfits. On TID2013 dataset, if weight decay is not implemented, SROCC on validation set only can reach 0.5
 
-2. Weight distribution is different from the model provided by the original authors.
+2. Weight distribution of the model trained is different from the model provided by the original authors. 
 
 #### Environment
 1. Pytorch 1.1.0+ with GPU
